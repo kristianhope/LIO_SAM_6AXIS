@@ -1,9 +1,10 @@
 lio_sam_6axis:
 
-  # for ouster and stim300(6 axis)
+  #  ouster os1-64 and internal imu
+
   # Topics
-  pointCloudTopic: "/os_cloud_node/points"               # Point cloud data
-  imuTopic: "/os_cloud_node/imu"                         # IMU data
+  pointCloudTopic: "/ouster/points"               # Point cloud data
+  imuTopic: "/ouster/imu"                         # IMU data
   odomTopic: "odometry/imu"                   # IMU pre-preintegration odometry, same frequency as IMU
   gpsTopic: "gps_odom"                   # GPS odometry topic from navsat, see module_navsat.launch file
 
@@ -13,14 +14,13 @@ lio_sam_6axis:
   odometryFrame: "odom"
   mapFrame: "map"
 
-
   # GPS Settings
   useGPS: false
   gpsFrequence: 10                            # set proper gps frequence to align gps and lidar timestamp
-  useImuHeadingInitialization: false           # if using GPS data, set to "true"
+  useImuHeadingInitialization: false         # if using GPS data, set to "false"
   useGpsElevation: true                      # if GPS elevation is bad, set to "false"
   gpsCovThreshold: 2.0                        # m^2, threshold for using GPS data
-  poseCovThreshold: 0.02                      # m^2, threshold for using GPS data
+  poseCovThreshold: 25.0                      # m^2, threshold for using GPS data
 
   # debug setting
   debugLidarTimestamp: true
@@ -28,20 +28,19 @@ lio_sam_6axis:
   debugGps: false
 
   # Export settings
-  savePCD: true                              # https://github.com/TixiaoShan/LIO-SAM/issues/3
-  savePCDDirectory: "/home/xchu/ramlab_ws/src/LIO-SAM-6AXIS/data/"        # in your home folder, starts and ends with "/". Warning: the code deletes "LOAM" folder then recreates it. See "mapOptimization" for implementation
-  scene_name: "map"
+  savePCD: false                              # https://github.com/TixiaoShan/LIO-SAM/issues/3
+  savePCDDirectory: "/Downloads/LOAM/"        # actually we do not use the floder to save maps
 
-  #   Sensor Settings
-  sensor: ouster                            # lidar sensor type, 'velodyne' or 'ouster' or 'livox'
-  N_SCAN: 128                                  # number of lidar channel (i.e., Velodyne/Ouster: 16, 32, 64, 128, Livox Horizon: 6)
+  # depends on your own lidar!!!!
+  sensor: ouster                            # lidar sensor type, 'velodyne' or 'ouster' or 'livox' or 'hesai'
+  N_SCAN: 64                                  # number of lidar channel (i.e., Velodyne/Ouster: 16, 32, 64, 128, Livox Horizon: 6)
   Horizon_SCAN: 2048                          # lidar horizontal resolution (Velodyne:1800, Ouster:512,1024,2048, Livox Horizon: 4000)
   downsampleRate: 1                           # default: 1. Downsample your data if too many points. i.e., 16 = 64 / 4, 16 = 16 / 1
-  lidarMinRange: 0.5                          # default: 1.0, minimum lidar range to be used
-  lidarMaxRange: 100.0                       # default: 1000.0, maximum lidar range to be used
+  lidarMinRange: 1.5                          # default: 1.0, minimum lidar range to be used
+  lidarMaxRange: 1000.0
 
   # IMU Settings
-  imuFrequence: 200
+  imuFrequence: 100
   imuAccNoise: 0.0011501915187049582
   imuGyrNoise: 5.084312924828687e-05
   imuAccBiasN: 3.729854069064516e-05
@@ -49,14 +48,23 @@ lio_sam_6axis:
   imuGravity: 9.80511
   imuRPYWeight: 0.01
 
-  #  stim300
-  extrinsicTrans: [ -0.047781, 0.007303, -0.026583 ]
-  extrinsicRot: [ 0.9999872, -0.0010636, -0.0049547,
-                  0.0010324,  0.9999796, -0.0062985,
-                  0.0049613,  0.0062933,  0.9999679 ]
-  extrinsicRPY: [ 0.9999872, -0.0010636, -0.0049547,
-                  0.0010324,  0.9999796, -0.0062985,
-                  0.0049613,  0.0062933,  0.9999679 ]
+  # stim300  lidar->imu
+  imu_type: 0   # 0: 6axis, 1:9 axis
+  #extrinsicTrans: [ -0.047781, 0.007303, -0.026583 ]
+  #extrinsicRot: [ 0.9999872, -0.0010636, -0.0049547,
+  #                0.0010324,  0.9999796, -0.0062985,
+  #                0.0049613,  0.0062933,  0.9999679 ]
+  #extrinsicRPY: [ 0.9999872, -0.0010636, -0.0049547,
+  #                0.0010324,  0.9999796, -0.0062985,
+  #                0.0049613,  0.0062933,  0.9999679 ]
+
+  extrinsicTrans: [ 0.0, 0.0, 0.0 ]
+  extrinsicRot:   [-1,           1.22465e-16,       1.49976e-32,
+                    1.22465e-16, 1,                 1.22465e-16,
+                    0,           1.22465e-16,       1           ]
+  extrinsicRPY: [-1,           1.22465e-16,       1.49976e-32,
+                    1.22465e-16, 1,                 1.22465e-16,
+                    0,           1.22465e-16,       1           ]
 
   # LOAM feature threshold
   edgeThreshold: 1.0
@@ -74,23 +82,23 @@ lio_sam_6axis:
   rotation_tollerance: 1000                     # radians
 
   # CPU Params
-  numberOfCores: 8                              # number of cores for mapping optimization
+  numberOfCores: 6                             # number of cores for mapping optimization
   mappingProcessInterval: 0.15                  # seconds, regulate mapping frequency
 
   # Surrounding map
-  surroundingkeyframeAddingDistThreshold: 0.2   # meters, regulate keyframe adding threshold
-  surroundingkeyframeAddingAngleThreshold: 0.1  # radians, regulate keyframe adding threshold
+  surroundingkeyframeAddingDistThreshold: 0.5   # meters, regulate keyframe adding threshold
+  surroundingkeyframeAddingAngleThreshold: 0.2  # radians, regulate keyframe adding threshold
   surroundingKeyframeDensity: 2.0               # meters, downsample surrounding keyframe poses
-  surroundingKeyframeSearchRadius: 30.0         # meters, within n meters scan-to-map optimization (when loop closure disabled)
+  surroundingKeyframeSearchRadius: 50.0         # meters, within n meters scan-to-map optimization (when loop closure disabled)
 
   # Loop closure
   loopClosureEnableFlag: true
-  loopClosureFrequency: 2.0                     # Hz, regulate loop closure constraint add frequency
+  loopClosureFrequency: 1.0                     # Hz, regulate loop closure constraint add frequency
   surroundingKeyframeSize: 30                   # submap size (when loop closure enabled)
-  historyKeyframeSearchRadius: 30.0             # meters, key frame that is within n meters from current pose will be considerd for loop closure
+  historyKeyframeSearchRadius: 40.0             # meters, key frame that is within n meters from current pose will be considerd for loop closure
   historyKeyframeSearchTimeDiff: 25.0           # seconds, key frame that is n seconds older will be considered for loop closure
   historyKeyframeSearchNum: 25                  # number of hostory key frames will be fused into a submap for loop closure
-  historyKeyframeFitnessScore: 0.8              # icp threshold, the smaller the better alignment
+  historyKeyframeFitnessScore: 0.9              # icp threshold, the smaller the better alignment
 
   # Visualization
   globalMapVisualizationSearchRadius: 1000.0    # meters, global map visualization radius
@@ -98,18 +106,4 @@ lio_sam_6axis:
   globalMapVisualizationLeafSize: 0.5           # meters, global map visualization cloud density
 
   # mapping
-  globalMapLeafSize: 0.1                        # saved map voxgrid size
-
-
-# Navsat (convert GPS coordinates to Cartesian)
-navsat:
-  frequency: 50
-  wait_for_datum: false
-  delay: 0.0
-  magnetic_declination_radians: 0
-  yaw_offset: 0
-  zero_altitude: true
-  broadcast_utm_transform: false
-  broadcast_utm_transform_as_parent_frame: false
-  publish_filtered_gps: false
-
+  globalMapLeafSize: 0.2                        # saved map voxgrid size
